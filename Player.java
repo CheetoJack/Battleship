@@ -1,8 +1,8 @@
 import java.util.Scanner;
 
 public class Player {
-	private Board myBoard;
-	private Board theirBoard;
+	private Board myBoard; //Current player's board
+	private Board theirBoard; //Enemy's board
 	private Scanner input;
 	private String name;
 	private char lastColumnFiredAt;
@@ -15,6 +15,7 @@ public class Player {
 		this.name = name;
 	}
 
+	//Returns a string that corresponds to the enumerated type
 	public static String getLocationContentTypeString(LocationContentTypes type) {
 		switch (type) {
 		case None:
@@ -38,6 +39,7 @@ public class Player {
 		}
 	}
 
+	//Processes the response of an enemy's move to the player's move
 	public void processEnemyResponse(FiringResult result) {
 		switch (result) {
 		case Hit:
@@ -53,6 +55,8 @@ public class Player {
 		}
 	}
 
+	//Processes an enemy's move
+	//Returns a response to the enemy's move
 	public FiringResponse checkForDamage(int row, int column) {
 		LocationContentTypes content = myBoard.getTile(row, column).getContent();
 		FiringResult result = myBoard.checkIfHit(row, column);
@@ -60,6 +64,7 @@ public class Player {
 		return new FiringResponse(result, content);
 	}
 
+	//Places each ship on the board with User Input
 	public void placeShips() {
 		while (!placeShip(LocationContentTypes.Battleship)) {
 			System.out.println("Something went wrong... Try again");
@@ -82,6 +87,7 @@ public class Player {
 		return name;
 	}
 
+	//Prints the boards of both the player and enemy
 	public void printBoardStates() {
 		System.out.println("Enemy's Board");
 		System.out.println(theirBoard + "\n");
@@ -89,11 +95,15 @@ public class Player {
 		System.out.println(myBoard);
 	}
 
+	//Stores where the player last fired
 	public void setLastFiredPosition(int row, char column) {
 		lastColumnFiredAt = column;
 		lastRowFiredAt = row;
 	}
-
+	
+	//Tries to place a ship with user input
+	//Takes a ship type to attempt to place
+	//Returns true if it succeeded
 	private boolean placeShip(LocationContentTypes ship) {
 		System.out.println(myBoard);
 
@@ -109,6 +119,7 @@ public class Player {
 		return myBoard.placeShip(row, column, orientation, ship);
 	}
 
+	//Transforms user inputted string into an Enumeration
 	private ShipOrientation getOrientation(String input) {
 		switch (input.toUpperCase().charAt(0)) {
 		case 'N':

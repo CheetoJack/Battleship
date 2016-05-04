@@ -1,11 +1,12 @@
 import java.io.*;
 import java.net.*;
 
-public class ClientMessenger implements IMessenger{
+public class ClientMessenger implements IMessenger {
 	private Socket echoSocket;
 	private PrintWriter outSend;
 	private BufferedReader inSend;
-	boolean ready = false;
+	private boolean ready = false;
+	private String lastMessage = "";
 
 	public ClientMessenger(String hostName, int portNumber) throws IOException {
 
@@ -24,11 +25,8 @@ public class ClientMessenger implements IMessenger{
 	}
 
 	public void sendMessage(String message) {
-		if (ready) {
-			// POINT A
-
-			// User Input is withing the userInput variable at this point
-			// The below function is the variable that is sent to the server
+		if (ready && Battleship.randomizeSendingMessage()) {
+			lastMessage = message;
 			outSend.println(message);
 		}
 	}
@@ -38,12 +36,24 @@ public class ClientMessenger implements IMessenger{
 			String input = "";
 			try {
 				input = inSend.readLine();
+				if (Game.PRINT_RECEIVED_MESSAGES) {
+					System.out.println(input);
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			return input;
 		} else {
 			return "";
+		}
+	}
+
+	public void setTimeout(int timeout) {
+		try {
+			echoSocket.setSoTimeout(timeout * Game.MILLIS_IN_SECOND);
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -57,5 +67,9 @@ public class ClientMessenger implements IMessenger{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void resendLastMessage() {
+		sendMessage(lastMessage);
 	}
 }

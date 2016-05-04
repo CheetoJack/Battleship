@@ -4,6 +4,23 @@ public class Battleship {
 	private static Scanner input;
 
 	public static void main(String[] arghs) {
+		int timeout = 0;
+
+		for (int i = 0; i < arghs.length; i++) {
+			if (arghs[i].equals("-t")) {
+				timeout = 10;
+				if (i + 1 < arghs.length) {
+					try {
+						timeout = Integer.parseInt(arghs[i + 1]);
+					} catch (NumberFormatException ex) {
+						// Do nothing, argument was not a number, and thus does
+						// not need processing
+					}
+				}
+
+			}
+		}
+
 		input = new Scanner(System.in);
 		showTitleScreen();
 
@@ -15,11 +32,19 @@ public class Battleship {
 			// This is the client
 			game = new Game(input, false);
 		}
-		game.mainGameLoop();
-		
-		//Clean up resources
+
+		if (game.connectGames(timeout)) {
+			game.placeShips();
+			game.mainGameLoop();
+		} else {
+			System.out.println("Something went wrong while trying to connect the server and client.");
+		}
+
+		// Clean up resources
 		game.closeNetworkConnection();
 		input.close();
+
+		System.out.println("Shutting down...");
 	}
 
 	private static void showTitleScreen() {
@@ -32,6 +57,12 @@ public class Battleship {
 		System.out.println(" |______  /(____  /__|  |__| |____/\\___  >____  >___|  /__|   __/ ");
 		System.out.println("        \\/      \\/                     \\/     \\/     \\/   |__| ");
 
+	}
+
+	public static boolean randomizeSendingMessage() {
+		int random = (int) (Math.random() * 10);
+
+		return random < 9;
 	}
 
 	private static boolean isServer() {

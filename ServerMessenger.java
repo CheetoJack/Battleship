@@ -6,7 +6,8 @@ public class ServerMessenger implements IMessenger {
 	private Socket clientSocket;
 	private BufferedReader in;
 	private PrintWriter out;
-	boolean ready = false;
+	private String lastMessage = "";
+	private boolean ready = false;
 
 	public ServerMessenger(int portNumber) throws IOException {
 		try {
@@ -23,7 +24,10 @@ public class ServerMessenger implements IMessenger {
 	}
 
 	public void sendMessage(String message) {
-		out.println(message);
+		if (ready && Battleship.randomizeSendingMessage()) {
+			lastMessage = message;
+			out.println(message);
+		}
 	}
 
 	public String receiveMessage() {
@@ -31,17 +35,29 @@ public class ServerMessenger implements IMessenger {
 			String input = "";
 			try {
 				input = in.readLine();
+				if (Game.PRINT_RECEIVED_MESSAGES) {
+					System.out.println(input);
+				}
+			} catch (SocketException e) {
+				System.out.println("No message received - TIMEOUT");
+				input="";
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+
 			return input;
 		} else {
 			return "";
 		}
 	}
 
-	public void closeServer() {
-		
+	public void setTimeout(int timeout) {
+		try {
+			serverSocket.setSoTimeout(timeout * Game.MILLIS_IN_SECOND);
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -54,5 +70,9 @@ public class ServerMessenger implements IMessenger {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void resendLastMessage() {
+		sendMessage(lastMessage);
 	}
 }

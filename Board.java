@@ -2,8 +2,8 @@
 public class Board {
 
 	private static final int BOARD_SIZE = 10;
-	private static final String DASHES = new String(new char[88]).replace("\0", "_");
-	private Tile[][] board;
+	//private static final String DASHES = new String(new char[88]).replace("\0", "_");
+	private Tile[][] board; //This actually stores the values of the ship
 
 	public Board() {
 		board = new Tile[BOARD_SIZE][BOARD_SIZE];
@@ -23,13 +23,14 @@ public class Board {
 		return board[row][column];
 	}
 
+	//Sets the tile specified by row, column to be newContents
 	public void setTileContents(int row, int column, LocationContentTypes newContents) {
 		board[row][column].setContent(newContents);
 	}
 
+	//Determines if a shot fired at (row, column) hit or not, and processes the result
+	//Returns the FiringResult of the shot
 	public FiringResult checkIfHit(int row, int column) {
-		// This is bad code but it works better and is faster to write than an
-		// if statement with a bunch of ORs
 		if (isShipType(board[row][column].getContent())) {
 			return hitShip(row, column, board[row][column].getContent());
 		} else {
@@ -38,15 +39,18 @@ public class Board {
 		}
 	}
 
+	//Processes result of a ship being hit
+	//Requires position of hit, current contents of location
+	//Returns if a ship was hit, sunk, or triggered a game over
 	private FiringResult hitShip(int row, int column, LocationContentTypes ship) {
 		board[row][column].setContent(LocationContentTypes.Hit);
 
 		boolean shipSunk = true;
-		int shipSpacesAlive = 0;
+		int battleshipSpacesAlive = 0;
 		for (int x = 0; x < board.length; x++) {
 			for (int y = 0; y < board[x].length; y++) {
-				if (isShipType(board[x][y].getContent())) {
-					shipSpacesAlive++;
+				if (board[x][y].getContent()==LocationContentTypes.Battleship) {
+					battleshipSpacesAlive++;
 				}
 
 				if (board[x][y].getContent() == ship) {
@@ -55,8 +59,7 @@ public class Board {
 			}
 		}
 
-		System.out.println("Ship spaces alive: " + shipSpacesAlive);
-		if (shipSpacesAlive == 0) {
+		if (battleshipSpacesAlive == 0) {
 			return FiringResult.GameOver;
 		}
 
@@ -67,6 +70,9 @@ public class Board {
 		}
 	}
 
+	//Places the specified ship after validating that the given input is valid for the location
+	//Requires the row, column, direction the ship should be placed starting from that point, and the ship to place
+	//Returns true if it succeeded, false if it did not
 	public boolean placeShip(int row, int column, ShipOrientation direction, LocationContentTypes ship) {
 		if (direction == ShipOrientation.North || direction == ShipOrientation.South) {
 			return placeShipVertically(row, column, direction, ship);
@@ -77,7 +83,9 @@ public class Board {
 		}
 	}
 
+	//Returns true if content is a Ship
 	private boolean isShipType(LocationContentTypes content) {
+		//This code isn't great, but it works a lot better than a series of ORs in an if statement
 		switch (content) {
 		case Battleship:
 		case Carrier:
@@ -91,27 +99,33 @@ public class Board {
 		}
 	}
 
+	//Places a ship on the board horizontally
+	//Returns true if successful
 	private boolean placeShipHorizontally(int row, int column, ShipOrientation direction, LocationContentTypes ship) {
 		int shipLength = getShipLength(ship);
 		int change = 0;
 
+		//Determine if the column should increase or decrease based on the given Direction		
 		if (direction == ShipOrientation.East) {
 			change = 1;
 		} else {
 			change = -1;
 		}
 
+		//Determines where the last space of the ship should be placed
 		int endingColumn = column + (shipLength * change);
 		if (endingColumn < 0 || endingColumn > 9) {
 			return false;
 		}
 
+		//Checks if the path for the ship to be placed is clear
 		for (int i = column; i != endingColumn; i += change) {
 			if (board[row][i].getContent() != LocationContentTypes.None) {
 				return false;
 			}
 		}
 
+		//Actually places the ship
 		for (int i = column; i != endingColumn; i += change) {
 			board[row][i].setContent(ship);
 		}
@@ -119,27 +133,33 @@ public class Board {
 		return true;
 	}
 
+	//Places a ship on the board vertically
+	//Returns true if successful
 	private boolean placeShipVertically(int row, int column, ShipOrientation direction, LocationContentTypes ship) {
 		int shipLength = getShipLength(ship);
 		int change = 0;
 
+		//Determine if the row should increase or decrease based on the given Direction
 		if (direction == ShipOrientation.South) {
 			change = 1;
 		} else {
 			change = -1;
 		}
 
+		//Determines where the last space of the ship should be placed
 		int endingRow = row + (shipLength * change);
 		if (endingRow < 0 || endingRow > 9) {
 			return false;
 		}
 
+		//Checks if the path for the ship to be placed is clear
 		for (int i = row; i != endingRow; i += change) {
 			if (board[i][column].getContent() != LocationContentTypes.None) {
 				return false;
 			}
 		}
 
+		//Actually places the ship
 		for (int i = row; i != endingRow; i += change) {
 			board[i][column].setContent(ship);
 		}
@@ -147,25 +167,25 @@ public class Board {
 		return true;
 	}
 
+	//Determines the length of each ship type
 	public int getShipLength(LocationContentTypes ship) {
-		 switch (ship) {
-		 case Battleship:
-			 return 6;
-		 case Carrier:
-		 	return 5;
-		 case Destroyer:
-		 	return 4;
-		 case Submarine:
-		 	return 3;
-		 case PatrolBoat:
-		 	return 2;
-		 default:
-		 	return 0;
-		 }
-
-		//return 1;
+		switch (ship) {
+		case Battleship:
+			return 6;
+		case Carrier:
+			return 5;
+		case Destroyer:
+			return 4;
+		case Submarine:
+			return 3;
+		case PatrolBoat:
+			return 2;
+		default: //Anything else is not a ship, and thus gets a length of zero
+			return 0;
+		}
 	}
 
+	//Returns a string containing the board state
 	public String toString() {
 		String output = "|\t|";
 
